@@ -1,12 +1,12 @@
 const CONFIG = {
   // 貼上你的 Google Apps Script Web App URL
-  GAS_URL: "https://script.google.com/macros/s/AKfycbwQGkiG6oJNcBiQyAcWhmUJ6K3-ySyJ2GkGP-hTRoKUL2mM_-LXHh7dCZBI0FmHOeTDfg/exec",
+  GAS_URL: "https://script.google.com/macros/s/AKfycbyTeClAkJqdEnyLIJUry7iP_EdDuOHZiAhj-iEik2W3MSjA62JXS82ln2GiVWUPllMK/exec",
 
   BOSS_EMAIL: "lianweoai77@gmail.com",
 
   // 會審組結構 (E, F, G 組)
   AUDIT_GROUPS: {
-    "會審E組": {
+    "E組": {
           leader_email: "eric_lin@example.com", // E組長信箱
           members: {
             "Eric林文舜": "eric_lin@example.com",
@@ -15,7 +15,7 @@ const CONFIG = {
             "Lina劉家伶": "lina_liu@example.com"
       }
     },
-    "會審F組": {
+    "F組": {
           leader_email: "kimi_lee@example.com", // F組長信箱
           members: {
             "Kimi李淑芬": "kimi_lee@example.com",
@@ -24,7 +24,7 @@ const CONFIG = {
             "Peggy胡沛琪": "peggy_hu@example.com"
           }
         },
-        "會審G組": {
+        "G組": {
           leader_email: "iris_chen@example.com", // G組長信箱
           members: {
             "Iris陳思瑋": "iris_chen@example.com",
