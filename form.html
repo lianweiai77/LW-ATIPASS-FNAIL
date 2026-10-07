@@ -99,8 +99,8 @@
           <tr>
             <td><b>主要聯絡人 <span style="color:red;">*</span></b></td>
             <td><input type="text" id="mainContactName" required placeholder="姓名"></td>
-            <td><input type="text" id="mainContactPhone" required placeholder="電話"></td>
-            <td><input type="email" id="mainContactEmail" required placeholder="Email"></td>
+            <td><input type="text" id="mainContactPhone" placeholder="電話"></td>
+            <td><input type="text" id="mainContactEmail" placeholder="Email"></td>
             <td style="text-align: center;">
               <label class="line-checkbox">
                 <input type="checkbox" id="mainContactLine"> LINE聯絡
@@ -111,7 +111,7 @@
             <td><b>次要聯絡人</b> <span class="optional-tag">(選填)</span></td>
             <td><input type="text" id="subContactName" placeholder="姓名"></td>
             <td><input type="text" id="subContactPhone" placeholder="電話"></td>
-            <td><input type="email" id="subContactEmail" placeholder="Email"></td>
+            <td><input type="text" id="subContactEmail" placeholder="Email"></td>
             <td style="text-align: center;">
               <label class="line-checkbox">
                 <input type="checkbox" id="subContactLine"> LINE聯絡
@@ -264,14 +264,14 @@
 
     // 2. 收集「聯絡方式」與 LINE
     const mainName = document.getElementById('mainContactName').value.trim();
-    const mainPhone = document.getElementById('mainContactPhone').value.trim();
-    const mainEmail = document.getElementById('mainContactEmail').value.trim();
-    const mainLine = document.getElementById('mainContactLine').checked ? '[可LINE聯絡]' : '[不可LINE]';
+    const mainPhone = document.getElementById('mainContactPhone').value.trim() || '未提供';
+    const mainEmail = document.getElementById('mainContactEmail').value.trim() || '未提供';
+    const mainLine = document.getElementById('mainContactLine').checked ? '[可LINE聯絡]' : '[無LINE聯繫]';
 
     const subName = document.getElementById('subContactName').value.trim();
-    const subPhone = document.getElementById('subContactPhone').value.trim();
-    const subEmail = document.getElementById('subContactEmail').value.trim();
-    const subLine = document.getElementById('subContactLine').checked ? '[可LINE聯絡]' : '[不可LINE]';
+    const subPhone = document.getElementById('subContactPhone').value.trim() || '未提供';
+    const subEmail = document.getElementById('subContactEmail').value.trim() || '未提供';
+    const subLine = document.getElementById('subContactLine').checked ? '[可LINE聯絡]' : '[無LINE聯繫]';
 
     let contactHtml = `主要聯絡人：${mainName} / ${mainPhone} / ${mainEmail} ${mainLine}`;
     if (subName || subPhone || subEmail) {
