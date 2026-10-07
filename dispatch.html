@@ -3,217 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>工商案件PASS分派表</title>
+  <title>工商案件派案</title>
   <style>
-    body { font-family: "Microsoft JhengHei", Arial, sans-serif; background-color: #f4f6f9; padding: 20px; }
-    .card { background: white; padding: 25px; border-radius: 8px; max-width: 650px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .btn { background-color: #007bff; color: white; border: none; padding: 10px 18px; font-size: 15px; border-radius: 5px; cursor: pointer; border-radius: 4px; }
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
-    .modal-content { background: white; margin: 8% auto; padding: 25px; width: 90%; max-width: 500px; border-radius: 8px; }
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f8f9fa; }
+    .container { max-width: 650px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: 0 auto; }
+    .info-card { background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    .info-card p { margin: 6px 0; }
     .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; font-weight: bold; }
-    select, input[type="number"] { width: 100%; padding: 8px; box-sizing: border-box; }
-    .price-row { display: flex; align-items: center; gap: 5px; margin-top: 5px; }
-    .price-row input { width: 90px; }
-    .actions { text-align: right; margin-top: 20px; }
+    label { font-weight: bold; display: block; margin-bottom: 5px; }
+    select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    .btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
+    .btn:hover { background: #218838; }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script src="config.js"></script>
 </head>
 <body>
 
-<div class="card">
-  <h2>工商案件PASS分派表</h2>
-  <div id="caseInfo">載入案件資料中...</div>
-  <br>
-  <button class="btn" onclick="openModal()">派案</button>
-</div>
-
-<!-- 彈出派案小表單視窗 -->
-<div id="dispatchModal" class="modal">
-  <div class="modal-content">
-    <h3>派案資訊填寫</h3>
-    <form onsubmit="handleDispatchSubmit(event)">
-      <div class="form-group">
-        <label>派案對象：</label>
-        <select id="assigneeSelect" required></select>
-      </div>
-
-      <div class="form-group">
-        <label>報價選擇：</label>
-        <div style="margin-bottom: 10px;">
-          <input type="checkbox" id="taxCheck" onchange="toggleInputs()">
-          <label for="taxCheck" style="display:inline;">【含國稅局】</label>
-          <div id="taxInputs" class="price-row" style="display:none; padding-left:20px;">
-            <input type="number" id="taxPrice" placeholder="金額"> - 
-            <input type="number" id="taxDiscount" placeholder="折扣">
-          </div>
-        </div>
-
-        <div>
-          <input type="checkbox" id="noTaxCheck" onchange="toggleInputs()">
-          <label for="noTaxCheck" style="display:inline;">【不含國稅局】</label>
-          <div id="noTaxInputs" class="price-row" style="display:none; padding-left:20px;">
-            <input type="number" id="noTaxPrice" placeholder="金額"> - 
-            <input type="number" id="noTaxDiscount" placeholder="折扣">
-          </div>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button type="button" class="btn" style="background:#6c757d;" onclick="closeModal()">取消</button>
-        <button type="submit" class="btn" style="background:#28a745;" id="dispatchBtn">寄出</button>
-      </div>
-    </form>
+<div class="container">
+  <h2>第二階段：工商組主管指派案件</h2>
+  
+  <div class="info-card">
+    <h3>案件詳細資訊</h3>
+    <p><strong>公司名稱：</strong> <span id="disp_company"></span></p>
+    <p><strong>代碼：</strong> <span id="disp_code"></span></p>
+    <p><strong>是否為記帳客戶：</strong> <span id="disp_is_client"></span></p>
+    <p id="disp_audit_box" style="display:none;"><strong>記帳組別/同事：</strong> <span id="disp_audit_info"></span></p>
+    <p id="disp_related_box" style="display:none;"><strong>相關公司：</strong> <span id="disp_related_company"></span></p>
+    <p><strong>變更內容：</strong> <span id="disp_change"></span></p>
+    <p><strong>主要聯絡人：</strong> <span id="disp_main"></span></p>
+    <p id="disp_sub_box" style="display:none;"><strong>次要聯絡人：</strong> <span id="disp_sub"></span></p>
+    <p><strong>是否已報價：</strong> <span id="disp_is_quoted"></span></p>
+    <p><strong>報價金額：</strong> <span id="disp_quote_price" style="color: #d9534f; font-weight: bold;"></span></p>
+    <p><strong>備註：</strong> <span id="disp_remark"></span></p>
   </div>
+
+  <div class="form-group">
+    <label for="assignee_select">選擇工商組派案專員 *</label>
+    <select id="assignee_select">
+      <option value="">-- 請選擇工商組專員 --</option>
+    </select>
+  </div>
+
+  <button class="btn" onclick="submitDispatch()">確認指派並發送通知</button>
 </div>
 
+<script src="config.js"></script>
 <script>
-  emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+let caseData = {};
 
-  // 解析 URL 參數取得案件資料
-  const params = new URLSearchParams(window.location.search);
-  const caseData = {
-    code: params.get('code') || '',
-    company: params.get('company') || '',
-    item: params.get('item') || '',
-    contact: params.get('contact') || '',
-    isClient: params.get('isClient') || '-',
-    group: params.get('group') || '-',
-    accountant: params.get('accountant') || '-',
-    accountantEmail: params.get('accountantEmail') || '',
-    managerEmail: params.get('managerEmail') || '',
-    quoted: params.get('quoted') || '',
-    related: params.get('related') || '',
-    remark: params.get('remark') || ''
+window.onload = function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  caseData = {
+    company: urlParams.get('company') || '未提供',
+    code: urlParams.get('code') || '未提供',
+    is_client: urlParams.get('is_client') || '否',
+    audit_group: urlParams.get('audit_group') || '',
+    audit_staff: urlParams.get('audit_staff') || '',
+    related_company: urlParams.get('related_company') || '無',
+    change: urlParams.get('change') || '未提供',
+    main: urlParams.get('main') || '未提供',
+    sub: urlParams.get('sub') || '',
+    is_quoted: urlParams.get('is_quoted') || '否',
+    quote_price: urlParams.get('quote_price') || '未報價',
+    remark: urlParams.get('remark') || '無'
   };
 
-  // 渲染頁面資訊
-  let pageDetailsHtml = `
-    <p><b>公司名稱：</b>${caseData.company}</p>
-    <p><b>代碼：</b>${caseData.code || '未填寫'}</p>
-    <p><b>項目：</b>${caseData.item}</p>
-    <p><b>聯絡方式：</b><br>${caseData.contact}</p>
-    <p><b>是否為記帳客戶：</b>${caseData.isClient}</p>
-  `;
+  document.getElementById('disp_company').innerText = caseData.company;
+  document.getElementById('disp_code').innerText = caseData.code;
+  document.getElementById('disp_is_client').innerText = caseData.is_client;
+  document.getElementById('disp_change').innerText = caseData.change;
+  document.getElementById('disp_main').innerText = caseData.main;
+  document.getElementById('disp_is_quoted').innerText = caseData.is_quoted;
+  document.getElementById('disp_quote_price').innerText = caseData.quote_price;
+  document.getElementById('disp_remark').innerText = caseData.remark;
 
-  if (caseData.isClient === '是') {
-    pageDetailsHtml += `
-      <p><b>組別：</b>${caseData.group}</p>
-      <p><b>帳務同事：</b>${caseData.accountant}</p>
-      <p><b>是否已報價及金額：</b>${caseData.quoted}</p>
-      <p><b>備註：</b>${caseData.remark}</p>
-    `;
+  if (caseData.is_client === '是') {
+    document.getElementById('disp_audit_info').innerText = `${caseData.audit_group} - ${caseData.audit_staff}`;
+    document.getElementById('disp_audit_box').style.display = 'block';
   } else {
-    pageDetailsHtml += `
-      <p><b>是否已報價及金額：</b>${caseData.quoted}</p>
-      <p><b>是否有相關企業：</b>${caseData.related}</p>
-      <p><b>備註：</b>${caseData.remark}</p>
-    `;
+    document.getElementById('disp_related_company').innerText = caseData.related_company;
+    document.getElementById('disp_related_box').style.display = 'block';
   }
 
-  document.getElementById('caseInfo').innerHTML = pageDetailsHtml;
-
-  // 動態載入 config.js 中的派案對象選單
-  const assigneeSelect = document.getElementById('assigneeSelect');
-  assigneeSelect.innerHTML = '<option value="">請選擇派案同仁</option>';
-  CONFIG.DISPATCH_ASSIGNEES.forEach(item => {
-    assigneeSelect.innerHTML += `<option value="${item.email}" data-name="${item.name}">${item.name}</option>`;
-  });
-
-  function openModal() { document.getElementById('dispatchModal').style.display = 'block'; }
-  function closeModal() { document.getElementById('dispatchModal').style.display = 'none'; }
-  
-  function toggleInputs() {
-    document.getElementById('taxInputs').style.display = document.getElementById('taxCheck').checked ? 'flex' : 'none';
-    document.getElementById('noTaxInputs').style.display = document.getElementById('noTaxCheck').checked ? 'flex' : 'none';
+  if (caseData.sub && caseData.sub.trim() !== "") {
+    document.getElementById('disp_sub').innerText = caseData.sub;
+    document.getElementById('disp_sub_box').style.display = 'block';
   }
 
-  function handleDispatchSubmit(e) {
-    e.preventDefault();
-    const btn = document.getElementById('dispatchBtn');
-    btn.disabled = true;
-    btn.innerText = "寄出中...";
-
-    const selectedOption = assigneeSelect.options[assigneeSelect.selectedIndex];
-    const assigneeEmail = selectedOption.value;
-    const assigneeName = selectedOption.getAttribute('data-name');
-
-    // 組合報價文字
-    let quoteHtml = '';
-    if (document.getElementById('taxCheck').checked) {
-      const price = Number(document.getElementById('taxPrice').value) || 0;
-      const discount = Number(document.getElementById('taxDiscount').value) || 0;
-      quoteHtml += `【含國稅局】${price} - ${discount} = ${price - discount}元<br>`;
-    }
-    if (document.getElementById('noTaxCheck').checked) {
-      const price = Number(document.getElementById('noTaxPrice').value) || 0;
-      const discount = Number(document.getElementById('noTaxDiscount').value) || 0;
-      quoteHtml += `【不含國稅局】${price} - ${discount} = ${price - discount}元<br>`;
-    }
-
-    // 計算 CC 清單
-    const otherAssignees = CONFIG.DISPATCH_ASSIGNEES.map(a => a.email).filter(email => email !== assigneeEmail);
-    const originalAll = [CONFIG.B_MANAGER_EMAIL, caseData.accountantEmail, caseData.managerEmail, CONFIG.BOSS_EMAIL];
-    const ccList = [...new Set([...otherAssignees, ...originalAll])].filter(Boolean).join(',');
-
-    // 組裝原信表格內容
-    let originalRows = `
-      <tr><td style="background:#f2f2f2; width:30%;"><b>公司名稱</b></td><td>${caseData.company}</td></tr>
-      <tr><td style="background:#f2f2f2;"><b>代碼</b></td><td>${caseData.code || '未填寫'}</td></tr>
-      <tr><td style="background:#f2f2f2;"><b>項目</b></td><td>${caseData.item}</td></tr>
-      <tr><td style="background:#f2f2f2;"><b>聯絡方式</b></td><td>${caseData.contact}</td></tr>
-      <tr><td style="background:#f2f2f2;"><b>是否為記帳客戶</b></td><td>${caseData.isClient}</td></tr>
-    `;
-
-    if (caseData.isClient === '是') {
-      originalRows += `
-        <tr><td style="background:#f2f2f2;"><b>組別</b></td><td>${caseData.group}</td></tr>
-        <tr><td style="background:#f2f2f2;"><b>帳務同事</b></td><td>${caseData.accountant}</td></tr>
-        <tr><td style="background:#f2f2f2;"><b>是否已報價及金額</b></td><td>${caseData.quoted}</td></tr>
-        <tr><td style="background:#f2f2f2;"><b>備註</b></td><td>${caseData.remark}</td></tr>
-      `;
-    } else {
-      originalRows += `
-        <tr><td style="background:#f2f2f2;"><b>是否已報價及金額</b></td><td>${caseData.quoted}</td></tr>
-        <tr><td style="background:#f2f2f2;"><b>是否有相關企業</b></td><td>${caseData.related}</td></tr>
-        <tr><td style="background:#f2f2f2;"><b>備註</b></td><td>${caseData.remark}</td></tr>
-      `;
-    }
-
-    const fullMessage = `
-      Dear ${assigneeName}，以下案件請協助處理：<br><br>
-      <b>【報價資訊】</b><br>
-      ${quoteHtml || '無'}<br>
-      <hr style="border:none; border-top:1px solid #ccc; margin:20px 0;">
-      <div style="color: #444;">
-        <p><b>----- 原始案件資訊 -----</b></p>
-        <p>Dear Mina，以下案件請協助派案：</p>
-        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; max-width: 650px; font-family: Arial, sans-serif;">
-          ${originalRows}
-        </table>
-      </div>
-    `;
-
-    const subjectCode = caseData.code ? `${caseData.code} ` : '';
-    const emailSubject = `【工商派案】${subjectCode}${caseData.company}`;
-
-    emailjs.send(CONFIG.EMAILJS_SERVICE_ID, CONFIG.EMAILJS_TEMPLATE_ID, {
-      to_email: assigneeEmail,
-      cc_email: ccList,
-      subject: emailSubject,
-      message_html: fullMessage
-    }).then(() => {
-      alert("派案完成並已發送通知信！");
-      closeModal();
-      btn.disabled = false;
-      btn.innerText = "寄出";
-    }, (err) => {
-      alert("派案失敗: " + JSON.stringify(err));
-      btn.disabled = false;
-      btn.innerText = "寄出";
+  // 載入工商組專員選單
+  const select = document.getElementById('assignee_select');
+  if (CONFIG.BUSINESS_DEPT && CONFIG.BUSINESS_DEPT.staff_emails) {
+    Object.keys(CONFIG.BUSINESS_DEPT.staff_emails).forEach(staff => {
+      const opt = document.createElement('option');
+      opt.value = staff;
+      opt.innerText = staff;
+      select.appendChild(opt);
     });
   }
+};
+
+function submitDispatch() {
+  const selectedStaff = document.getElementById('assignee_select').value;
+  if (!selectedStaff) {
+    alert('請選擇派案對象！');
+    return;
+  }
+
+  let groupLeaderEmail = "";
+  let staffEmail = "";
+  if (caseData.is_client === '是' && caseData.audit_group && CONFIG.AUDIT_GROUPS[caseData.audit_group]) {
+    groupLeaderEmail = CONFIG.AUDIT_GROUPS[caseData.audit_group].leader_email;
+    staffEmail = CONFIG.AUDIT_GROUPS[caseData.audit_group].members[caseData.audit_staff] || '';
+  }
+
+  const bossEmail = CONFIG.BOSS_EMAIL;
+  const assignedEmail = CONFIG.BUSINESS_DEPT.staff_emails[selectedStaff];
+
+  // 計算未被選到的其他專員
+  const unassignedEmails = Object.entries(CONFIG.BUSINESS_DEPT.staff_emails)
+    .filter(([name, email]) => name !== selectedStaff && email !== CONFIG.BUSINESS_DEPT.manager_email)
+    .map(([name, email]) => email);
+
+  const ccEmails = [staffEmail, groupLeaderEmail, bossEmail, ...unassignedEmails].filter(Boolean).join(',');
+
+  const payload = {
+    stage: 'stage2',
+    company_name: caseData.company,
+    case_code: caseData.code,
+    is_client: caseData.is_client,
+    audit_group: caseData.audit_group,
+    audit_staff: caseData.audit_staff,
+    related_company: caseData.related_company,
+    change_content: caseData.change,
+    main_contact: caseData.main,
+    sub_contact: caseData.sub,
+    is_quoted: caseData.is_quoted,
+    quote_price: caseData.quote_price,
+    case_remark: caseData.remark,
+    assigned_staff: selectedStaff,
+    to_email: assignedEmail,
+    cc_email: ccEmails
+  };
+
+  fetch(CONFIG.GAS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    alert(`案件已成功指派給 ${selectedStaff}！已自動發送派案通知信。`);
+  })
+  .catch(error => alert('派案發送失敗：' + error));
+}
 </script>
+
 </body>
 </html>

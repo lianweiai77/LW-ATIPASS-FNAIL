@@ -1,51 +1,52 @@
-// config.js
 const CONFIG = {
-  EMAILJS_PUBLIC_KEY: "PS5_BPkQ_IWh4ncFA",
-  EMAILJS_SERVICE_ID: "service_dkmpinw",
-  EMAILJS_TEMPLATE_ID: "template_9os41eu",
+  // 貼上你的 Google Apps Script Web App URL
+  GAS_URL: "https://script.google.com/macros/s/AKfycbwQGkiG6oJNcBiQyAcWhmUJ6K3-ySyJ2GkGP-hTRoKUL2mM_-LXHh7dCZBI0FmHOeTDfg/exec",
 
   BOSS_EMAIL: "lianweoai77@gmail.com",
-  B_MANAGER_EMAIL: "kathy_liu@lianwei.tw",
 
-  // 1. 各組別設定：加入主管 Email 以及該組別的所有同事清單
-  DEPARTMENTS: {
+  // 會審組結構 (E, F, G 組)
+  AUDIT_GROUPS: {
     "會審E組": {
-      managerEmail: "eric_lin@example.com", // 會審E組主管
-      members: [
-        { name: "Eric林文舜", email: "eric_lin@example.com" },
-        { name: "Ula范瀞云", email: "Ula_fan@example.com" },
-        { name: "Alison郭欣憶", email: "alison_guo@example.com" },
-        { name: "Lina劉家伶", email: "lina_liu@example.com" }
-      ]
+          leader_email: "eric_lin@example.com", // E組長信箱
+          members: {
+            "Eric林文舜": "eric_lin@example.com",
+            "Ula范瀞云": "ula_fan@example.com",
+            "Alison郭欣憶": "alison_guo@example.com",
+            "Lina劉家伶": "lina_liu@example.com"
+      }
     },
     "會審F組": {
-      managerEmail: "kimi_lee@example.com", // 會審F組主管
-      members: [
-        { name: "Kimi李淑芬", email: "kimi_lee@example.com" },
-        { name: "Wendy温惠閔", email: "wendy_wen@example.com" },
-        { name: "Coco黃淳暄", email: "coco_huang@example.com" },
-        { name: "Peggy胡沛琪", email: "peggy_hu@example.com" }
-      ]
-    },
-    "會審G組": {
-      managerEmail: "iris_chen@example.com", // 會審G組主管
-      members: [
-        { name: "Iris陳思瑋", email: "iris_chen@example.com" },
-        { name: "Ruby胡珞晴", email: "ruby_hu@example.com" },
-        { name: "Vicky童婷怡", email: "vicky_tong@example.com" },
-        { name: "Audrey黃淳暄", email: "audrey_huang@example.com" },
-        { name: "Pegg余泳霈", email: "pegg_yu@example.com" }
-      ]
-    }
+          leader_email: "kimi_lee@example.com", // F組長信箱
+          members: {
+            "Kimi李淑芬": "kimi_lee@example.com",
+            "Wendy温惠閔": "wendy_wen@example.com",
+            "Coco黃淳暄": "coco_huang@example.com",
+            "Peggy胡沛琪": "peggy_hu@example.com"
+          }
+        },
+        "會審G組": {
+          leader_email: "iris_chen@example.com", // G組長信箱
+          members: {
+            "Iris陳思瑋": "iris_chen@example.com",
+            "Ruby胡珞晴": "ruby_hu@example.com",
+            "Vicky童婷怡": "vicky_tong@example.com",
+            "Audrey黃淳暄": "audrey_huang@example.com",
+            "Pegg余泳霈": "pegg_yu@example.com"
+          }
+        }
   },
 
-  // B部門可派案的同事清單
-  DISPATCH_ASSIGNEES: [
-    { name: "Mina王麗茹", email: "mina_wang@example.com" },
-    { name: "Nancy李紫筠", email: "nancy_lee@example.com" },
-    { name: "Kathy劉怡萱", email: "kathy_liu@example.com" }
-  ]
+  // 工商組結構 (Mina 為主管)
+  BUSINESS_DEPT: {
+    manager_email: "mina_wang@example.com",
+    staff_emails: {
+        "Mina王麗茹": "mina_wang@example.com",
+        "Nancy李紫筠": "nancy_lee@example.com",
+        "Kathy劉怡萱": "kathy_liu@example.com"
+    }
+  }
 };
+  
 
 //之後更新程式碼要開終端機輸入
 //Bash
