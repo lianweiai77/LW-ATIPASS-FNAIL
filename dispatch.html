@@ -3,23 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>工商案件派案</title>
+  <title>工商案件主管派案</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; background-color: #f8f9fa; }
-    .container { max-width: 650px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: 0 auto; }
+    .container { max-width: 700px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: 0 auto; }
     .info-card { background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
     .info-card p { margin: 6px 0; }
     .form-group { margin-bottom: 15px; }
     label { font-weight: bold; display: block; margin-bottom: 5px; }
     select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-    .btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
+    
+    /* 報價計算表格樣式 */
+    .quote-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    .quote-table th, .quote-table td { border: 1px solid #ccc; padding: 8px; text-align: center; vertical-align: middle; }
+    .quote-table th { background-color: #f2f2f2; font-weight: bold; }
+    .quote-table input[type="number"] { width: 90%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    .quote-table input:disabled { background-color: #e9ecef; cursor: not-allowed; }
+    .total-text { font-weight: bold; color: #d9534f; }
+
+    .btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; margin-top: 10px; }
     .btn:hover { background: #218838; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>工商案件派案</h2>
+  <h2>第二階段：工商組主管指派案件</h2>
   
   <div class="info-card">
     <h3>案件詳細資訊</h3>
@@ -31,9 +40,42 @@
     <p><strong>變更內容：</strong> <span id="disp_change"></span></p>
     <p><strong>主要聯絡人：</strong> <span id="disp_main"></span></p>
     <p id="disp_sub_box" style="display:none;"><strong>次要聯絡人：</strong> <span id="disp_sub"></span></p>
-    <p><strong>是否已報價：</strong> <span id="disp_is_quoted"></span></p>
-    <p><strong>報價金額：</strong> <span id="disp_quote_price" style="color: #d9534f; font-weight: bold;"></span></p>
+    <p><strong>申請階段報價狀態：</strong> <span id="disp_is_quoted"></span></p>
     <p><strong>備註：</strong> <span id="disp_remark"></span></p>
+  </div>
+
+  <!-- 報價計算表格 -->
+  <div class="form-group">
+    <label>報價金額設定（請勾選欲計算的項目）</label>
+    <table class="quote-table">
+      <thead>
+        <tr>
+          <th style="width: 10%;">啟用</th>
+          <th style="width: 20%;">項目</th>
+          <th style="width: 22%;">報價 ($)</th>
+          <th style="width: 22%;">折扣 ($)</th>
+          <th style="width: 26%;">折扣後金額 ($)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 含國稅局 -->
+        <tr>
+          <td><input type="checkbox" id="tax_inc_check" onchange="toggleQuoteRow('tax_inc')"></td>
+          <td><strong>含國稅局</strong></td>
+          <td><input type="number" id="tax_inc_price" disabled value="0" min="0" oninput="calcQuote('tax_inc')"></td>
+          <td><input type="number" id="tax_inc_discount" disabled value="0" min="0" oninput="calcQuote('tax_inc')"></td>
+          <td><span id="tax_inc_total" class="total-text">0</span></td>
+        </tr>
+        <!-- 不含國稅局 -->
+        <tr>
+          <td><input type="checkbox" id="tax_exc_check" onchange="toggleQuoteRow('tax_exc')"></td>
+          <td><strong>不含國稅局</strong></td>
+          <td><input type="number" id="tax_exc_price" disabled value="0" min="0" oninput="calcQuote('tax_exc')"></td>
+          <td><input type="number" id="tax_exc_discount" disabled value="0" min="0" oninput="calcQuote('tax_exc')"></td>
+          <td><span id="tax_exc_total" class="total-text">0</span></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <div class="form-group">
@@ -46,7 +88,7 @@
   <button class="btn" onclick="submitDispatch()">確認指派並發送通知</button>
 </div>
 
-<script src="config.js"></script>
+<script src="config.js?v=2.1"></script>
 <script>
 let caseData = {};
 
@@ -73,8 +115,7 @@ window.onload = function() {
   document.getElementById('disp_is_client').innerText = caseData.is_client;
   document.getElementById('disp_change').innerText = caseData.change;
   document.getElementById('disp_main').innerText = caseData.main;
-  document.getElementById('disp_is_quoted').innerText = caseData.is_quoted;
-  document.getElementById('disp_quote_price').innerText = caseData.quote_price;
+  document.getElementById('disp_is_quoted').innerText = `${caseData.is_quoted} (前階段紀錄: ${caseData.quote_price})`;
   document.getElementById('disp_remark').innerText = caseData.remark;
 
   if (caseData.is_client === '是') {
@@ -102,12 +143,55 @@ window.onload = function() {
   }
 };
 
+// 切換輸入框啟用狀態
+function toggleQuoteRow(type) {
+  const isChecked = document.getElementById(`${type}_check`).checked;
+  document.getElementById(`${type}_price`).disabled = !isChecked;
+  document.getElementById(`${type}_discount`).disabled = !isChecked;
+  calcQuote(type);
+}
+
+// 自動即時計算 <報價 - 折扣>
+function calcQuote(type) {
+  const isChecked = document.getElementById(`${type}_check`).checked;
+  if (!isChecked) {
+    document.getElementById(`${type}_total`).innerText = "0";
+    return;
+  }
+  const price = parseFloat(document.getElementById(`${type}_price`).value) || 0;
+  const discount = parseFloat(document.getElementById(`${type}_discount`).value) || 0;
+  const total = Math.max(0, price - discount);
+  document.getElementById(`${type}_total`).innerText = total.toLocaleString();
+}
+
 function submitDispatch() {
   const selectedStaff = document.getElementById('assignee_select').value;
   if (!selectedStaff) {
     alert('請選擇派案對象！');
     return;
   }
+
+  const taxIncChecked = document.getElementById('tax_inc_check').checked;
+  const taxExcChecked = document.getElementById('tax_exc_check').checked;
+
+  if (!taxIncChecked && !taxExcChecked) {
+    alert('請至少勾選一項報價（【含國稅局】或【不含國稅局】）！');
+    return;
+  }
+
+  // 組成報價數據物件（傳遞給 GAS 組合 HTML 信件內文）
+  const quoteDetails = {
+    tax_inc: taxIncChecked ? {
+      price: document.getElementById('tax_inc_price').value || "0",
+      discount: document.getElementById('tax_inc_discount').value || "0",
+      total: document.getElementById('tax_inc_total').innerText
+    } : null,
+    tax_exc: taxExcChecked ? {
+      price: document.getElementById('tax_exc_price').value || "0",
+      discount: document.getElementById('tax_exc_discount').value || "0",
+      total: document.getElementById('tax_exc_total').innerText
+    } : null
+  };
 
   let groupLeaderEmail = "";
   let staffEmail = "";
@@ -119,7 +203,6 @@ function submitDispatch() {
   const bossEmail = CONFIG.BOSS_EMAIL;
   const assignedEmail = CONFIG.BUSINESS_DEPT.staff_emails[selectedStaff];
 
-  // 計算未被選到的其他專員
   const unassignedEmails = Object.entries(CONFIG.BUSINESS_DEPT.staff_emails)
     .filter(([name, email]) => name !== selectedStaff && email !== CONFIG.BUSINESS_DEPT.manager_email)
     .map(([name, email]) => email);
@@ -137,8 +220,7 @@ function submitDispatch() {
     change_content: caseData.change,
     main_contact: caseData.main,
     sub_contact: caseData.sub,
-    is_quoted: caseData.is_quoted,
-    quote_price: caseData.quote_price,
+    quote_details: quoteDetails, // 將報價明細傳送給 GAS
     case_remark: caseData.remark,
     assigned_staff: selectedStaff,
     to_email: assignedEmail,
@@ -152,7 +234,7 @@ function submitDispatch() {
     body: JSON.stringify(payload)
   })
   .then(() => {
-    alert(`案件已成功指派給 ${selectedStaff}！已自動發送派案通知信。`);
+    alert(`案件已成功指派給 ${selectedStaff}！已發送派案通知信。`);
   })
   .catch(error => alert('派案發送失敗：' + error));
 }

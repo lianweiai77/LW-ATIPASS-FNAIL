@@ -49,6 +49,6 @@ const CONFIG = {
   
 
 //之後更新程式碼要開終端機輸入
-//Bash
 //git add .
-//git commit -m "更新內容說明"
+//git commit -m "Fix alignment and responsive layout for contact table in form.html"
+//git push
