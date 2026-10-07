@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工商案件PASS表</title>
+  <style>
+    body { font-family: "Microsoft JhengHei", Arial, sans-serif; background-color: #f4f6f9; padding: 20px; }
+    .container { max-width: 750px; background: white; padding: 30px; margin: 0 auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #333; margin-bottom: 25px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 6px; font-weight: bold; color: #444; }
+    input[type="text"], input[type="email"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    
+    /* 單選 / 複選區域樣式 */
+    .radio-group, .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 5px; }
+    .radio-item, .checkbox-item { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    .radio-item input, .checkbox-item input { cursor: pointer; }
+
+    /* 聯絡人表格樣式 */
+    .contact-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+    .contact-table th, .contact-table td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: middle; }
+    .contact-table th { background-color: #f8f9fa; font-weight: bold; }
+    .contact-table input[type="text"], .contact-table input[type="email"] { border: none; padding: 6px; }
+    .contact-table input[type="text"]:focus, .contact-table input[type="email"]:focus { outline: 1px solid #007bff; }
+    .line-checkbox { display: flex; align-items: center; gap: 4px; font-size: 0.9em; cursor: pointer; white-space: nowrap; }
+
+    button { width: 100%; background-color: #007bff; color: white; border: none; padding: 12px; font-size: 16px; border-radius: 5px; cursor: pointer; margin-top: 15px; font-weight: bold; }
+    button:hover { background-color: #0056b3; }
+    .optional-tag { font-weight: normal; color: #777; font-size: 0.9em; }
+    .conditional-box { background-color: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin-bottom: 20px; border-radius: 0 4px 4px 0; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script src="config.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <h2>工商案件PASS表</h2>
+  <form id="caseForm" onsubmit="handleFormSubmit(event)">
+    
+    <!-- 公司名稱 (必填) -->
+    <div class="form-group">
+      <label>公司名稱 <span style="color:red;">*</span></label>
+      <input type="text" id="company" required placeholder="請輸入公司名稱">
+    </div>
+
+    <!-- 代碼 (選填) -->
+    <div class="form-group">
+      <label>代碼 <span class="optional-tag">(選填)</span></label>
+      <input type="text" id="code" placeholder="請輸入代碼 (若無可不填)">
+    </div>
+
+    <!-- 項目 (複選 + 其他) -->
+    <div class="form-group">
+      <label>項目 <span style="color:red;">*</span> <span class="optional-tag">(可複選)</span></label>
+      <div class="checkbox-group">
+        <label class="checkbox-item"><input type="checkbox" name="item" value="公司設立"> 公司設立</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="行號設立"> 行號設立</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="負責人變更"> 負責人變更</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="改選董事監察人"> 改選董事監察人</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="增資、發行新股"> 增資、發行新股</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="減資"> 減資</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="僅資本額簽證"> 僅資本額簽證</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="出資額、股權轉讓"> 出資額、股權轉讓</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="贈與稅申報"> 贈與稅申報</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="投審司申請"> 投審司申請</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="所在地變更"> 所在地變更</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="新增、減少營業項目"> 新增、減少營業項目</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="董事、監察人或股東地址變更"> 董事、監察人或股東地址變更</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="修正章程"> 修正章程</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="抄錄"> 抄錄</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="（展延）停業"> （展延）停業</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="復業"> 復業</label>
+        <label class="checkbox-item"><input type="checkbox" name="item" value="解散"> 解散</label>
+        <label class="checkbox-item">
+          <input type="checkbox" id="itemOtherCheck" onchange="toggleOtherInput()"> 其他
+        </label>
+      </div>
+      <div id="otherItemBox" style="display: none; margin-top: 10px;">
+        <input type="text" id="itemOtherText" placeholder="請輸入其他項目內容">
+      </div>
+    </div>
+
+    <!-- 聯絡方式 (主要 & 次要聯絡人 + LINE 勾選框) -->
+    <div class="form-group">
+      <label>聯絡方式 <span style="color:red;">*</span></label>
+      <table class="contact-table">
+        <thead>
+          <tr>
+            <th style="width: 18%;">角色</th>
+            <th style="width: 22%;">姓名</th>
+            <th style="width: 22%;">電話</th>
+            <th style="width: 23%;">Email</th>
+            <th style="width: 15%;">LINE 聯絡</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>主要聯絡人 <span style="color:red;">*</span></b></td>
+            <td><input type="text" id="mainContactName" required placeholder="姓名"></td>
+            <td><input type="text" id="mainContactPhone" required placeholder="電話"></td>
+            <td><input type="email" id="mainContactEmail" required placeholder="Email"></td>
+            <td style="text-align: center;">
+              <label class="line-checkbox">
+                <input type="checkbox" id="mainContactLine"> LINE聯絡
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td><b>次要聯絡人</b> <span class="optional-tag">(選填)</span></td>
+            <td><input type="text" id="subContactName" placeholder="姓名"></td>
+            <td><input type="text" id="subContactPhone" placeholder="電話"></td>
+            <td><input type="email" id="subContactEmail" placeholder="Email"></td>
+            <td style="text-align: center;">
+              <label class="line-checkbox">
+                <input type="checkbox" id="subContactLine"> LINE聯絡
+              </label>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 是否為記帳客戶 (單選) -->
+    <div class="form-group">
+      <label>是否為記帳客戶？ <span style="color:red;">*</span></label>
+      <div class="radio-group">
+        <label class="radio-item">
+          <input type="radio" name="isClient" value="是" onchange="toggleClientFields('是')" required> 是
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="isClient" value="否" onchange="toggleClientFields('否')"> 否
+        </label>
+      </div>
+    </div>
+
+    <!-- 條件區塊 1：選「是」顯示 (記帳組別、記帳同事、是否已報價及金額、備註) -->
+    <div id="isClientSection" class="conditional-box" style="display: none;">
+      <div class="form-group">
+        <label>組別 <span style="color:red;">*</span></label>
+        <select id="group" onchange="onGroupChange()">
+          <option value="">請選擇組別</option>
+          <option value="會審E組">會審E組</option>
+          <option value="會審F組">會審F組</option>
+          <option value="會審G組">會審G組</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>帳務同事 <span style="color:red;">*</span></label>
+        <select id="accountant" disabled>
+          <option value="">請先選擇組別</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>是否已報價及金額 <span class="optional-tag">(選填)</span></label>
+        <input type="text" id="quotedClient" placeholder="例：已報價 $15,000 / 未報價">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label>備註 <span class="optional-tag">(選填)</span></label>
+        <textarea id="remarkClient" rows="3" placeholder="其他注意事項"></textarea>
+      </div>
+    </div>
+
+    <!-- 條件區塊 2：選「否」顯示 (是否已報價及金額、是否有相關企業、備註) -->
+    <div id="notClientSection" class="conditional-box" style="display: none; border-left-color: #6c757d;">
+      <div class="form-group">
+        <label>是否已報價及金額 <span class="optional-tag">(選填)</span></label>
+        <input type="text" id="quotedNonClient" placeholder="例：已報價 $15,000 / 未報價">
+      </div>
+
+      <div class="form-group">
+        <label>是否有相關企業 <span class="optional-tag">(選填)</span></label>
+        <input type="text" id="related" placeholder="若有請填寫企業名稱">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label>備註 <span class="optional-tag">(選填)</span></label>
+        <textarea id="remarkNonClient" rows="3" placeholder="其他注意事項"></textarea>
+      </div>
+    </div>
+
+    <button type="submit" id="submitBtn">工商案件PASS表寄出</button>
+  </form>
+</div>
+
+<script>
+  emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+
+  // 控制「其他」項目的文字輸入框顯示/隱藏
+  function toggleOtherInput() {
+    const isChecked = document.getElementById('itemOtherCheck').checked;
+    document.getElementById('otherItemBox').style.display = isChecked ? 'block' : 'none';
+  }
+
+  // 切換「是否為記帳客戶」動態切換欄位
+  function toggleClientFields(status) {
+    const isClientBox = document.getElementById('isClientSection');
+    const notClientBox = document.getElementById('notClientSection');
+    const groupSelect = document.getElementById('group');
+    const accountantSelect = document.getElementById('accountant');
+
+    if (status === '是') {
+      isClientBox.style.display = 'block';
+      notClientBox.style.display = 'none';
+      groupSelect.required = true;
+      accountantSelect.required = true;
+    } else if (status === '否') {
+      isClientBox.style.display = 'none';
+      notClientBox.style.display = 'block';
+      groupSelect.required = false;
+      accountantSelect.required = false;
+      groupSelect.value = '';
+      accountantSelect.value = '';
+      accountantSelect.disabled = true;
+      accountantSelect.innerHTML = '<option value="">請先選擇組別</option>';
+    }
+  }
+
+  // 當選擇組別時，動態更新「帳務同事」選單
+  function onGroupChange() {
+    const groupVal = document.getElementById('group').value;
+    const accountantSelect = document.getElementById('accountant');
+    
+    accountantSelect.innerHTML = '<option value="">請選擇帳務同事</option>';
+    
+    if (groupVal && CONFIG.DEPARTMENTS[groupVal]) {
+      const members = CONFIG.DEPARTMENTS[groupVal].members;
+      members.forEach(member => {
+        accountantSelect.innerHTML += `<option value="${member.email}" data-name="${member.name}">${member.name}</option>`;
+      });
+      accountantSelect.disabled = false;
+    } else {
+      accountantSelect.disabled = true;
+    }
+  }
+
+  // 處理表單送出
+  function handleFormSubmit(e) {
+    e.preventDefault();
+
+    // 1. 收集「項目」複選框資料
+    const selectedItems = [];
+    document.querySelectorAll('input[name="item"]:checked').forEach(cb => {
+      selectedItems.push(cb.value);
+    });
+    if (document.getElementById('itemOtherCheck').checked) {
+      const otherVal = document.getElementById('itemOtherText').value.trim();
+      if (otherVal) {
+        selectedItems.push(`其他: ${otherVal}`);
+      } else {
+        selectedItems.push('其他');
+      }
+    }
+
+    if (selectedItems.length === 0) {
+      alert("請至少選擇一個「項目」！");
+      return;
+    }
+    const itemsFormatted = selectedItems.join('、');
+
+    // 2. 收集「聯絡方式」與 LINE
+    const mainName = document.getElementById('mainContactName').value.trim();
+    const mainPhone = document.getElementById('mainContactPhone').value.trim();
+    const mainEmail = document.getElementById('mainContactEmail').value.trim();
+    const mainLine = document.getElementById('mainContactLine').checked ? '[可LINE聯絡]' : '[不可LINE]';
+
+    const subName = document.getElementById('subContactName').value.trim();
+    const subPhone = document.getElementById('subContactPhone').value.trim();
+    const subEmail = document.getElementById('subContactEmail').value.trim();
+    const subLine = document.getElementById('subContactLine').checked ? '[可LINE聯絡]' : '[不可LINE]';
+
+    let contactHtml = `主要聯絡人：${mainName} / ${mainPhone} / ${mainEmail} ${mainLine}`;
+    if (subName || subPhone || subEmail) {
+      contactHtml += `<br>次要聯絡人：${subName || '-'} / ${subPhone || '-'} / ${subEmail || '-'} ${subLine}`;
+    }
+
+    // 3. 根據「是否為記帳客戶」收集不同對應欄位
+    const isClientVal = document.querySelector('input[name="isClient"]:checked').value;
+    let groupVal = '-';
+    let accountantName = '-';
+    let accountantEmail = '';
+    let managerEmail = '';
+    let quotedVal = '無';
+    let relatedVal = '無';
+    let remarkVal = '無';
+
+    if (isClientVal === '是') {
+      groupVal = document.getElementById('group').value;
+      const deptInfo = CONFIG.DEPARTMENTS[groupVal];
+      managerEmail = deptInfo ? deptInfo.managerEmail : '';
+
+      const accountantSelect = document.getElementById('accountant');
+      const selectedOption = accountantSelect.options[accountantSelect.selectedIndex];
+      accountantName = selectedOption.getAttribute('data-name');
+      accountantEmail = selectedOption.value;
+
+      quotedVal = document.getElementById('quotedClient').value.trim() || '無';
+      remarkVal = document.getElementById('remarkClient').value.trim() || '無';
+    } else {
+      quotedVal = document.getElementById('quotedNonClient').value.trim() || '無';
+      relatedVal = document.getElementById('related').value.trim() || '無';
+      remarkVal = document.getElementById('remarkNonClient').value.trim() || '無';
+    }
+
+    const codeVal = document.getElementById('code').value.trim();
+
+    const data = {
+      company: document.getElementById('company').value.trim(),
+      code: codeVal,
+      item: itemsFormatted,
+      contactDisplay: contactHtml,
+      isClient: isClientVal,
+      group: groupVal,
+      accountant: accountantName,
+      accountantEmail: accountantEmail,
+      managerEmail: managerEmail,
+      quoted: quotedVal,
+      related: relatedVal,
+      remark: remarkVal
+    };
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerText = "寄出中...";
+
+    // 4. 產生第二階段派案網頁 (dispatch.html) 的 URL 連結與參數
+    const baseUrl = window.location.href.replace('form.html', 'dispatch.html');
+    const dispatchUrl = `${baseUrl}?code=${encodeURIComponent(data.code)}` +
+      `&company=${encodeURIComponent(data.company)}` +
+      `&item=${encodeURIComponent(data.item)}` +
+      `&contact=${encodeURIComponent(data.contactDisplay)}` +
+      `&isClient=${encodeURIComponent(data.isClient)}` +
+      `&group=${encodeURIComponent(data.group)}` +
+      `&accountant=${encodeURIComponent(data.accountant)}` +
+      `&accountantEmail=${encodeURIComponent(data.accountantEmail)}` +
+      `&managerEmail=${encodeURIComponent(data.managerEmail)}` +
+      `&quoted=${encodeURIComponent(data.quoted)}` +
+      `&related=${encodeURIComponent(data.related)}` +
+      `&remark=${encodeURIComponent(data.remark)}`;
+
+    // 5. 動態組合信件表格內容（根據是否為記帳客戶呈現對應欄位）
+    let emailRows = `
+      <tr><td style="background:#f2f2f2; width:30%;"><b>公司名稱</b></td><td>${data.company}</td></tr>
+      <tr><td style="background:#f2f2f2;"><b>代碼</b></td><td>${data.code || '未填寫'}</td></tr>
+      <tr><td style="background:#f2f2f2;"><b>項目</b></td><td>${data.item}</td></tr>
+      <tr><td style="background:#f2f2f2;"><b>聯絡方式</b></td><td>${data.contactDisplay}</td></tr>
+      <tr><td style="background:#f2f2f2;"><b>是否為記帳客戶</b></td><td>${data.isClient}</td></tr>
+    `;
+
+    if (data.isClient === '是') {
+      emailRows += `
+        <tr><td style="background:#f2f2f2;"><b>組別</b></td><td>${data.group}</td></tr>
+        <tr><td style="background:#f2f2f2;"><b>帳務同事</b></td><td>${data.accountant}</td></tr>
+        <tr><td style="background:#f2f2f2;"><b>是否已報價及金額</b></td><td>${data.quoted}</td></tr>
+        <tr><td style="background:#f2f2f2;"><b>備註</b></td><td>${data.remark}</td></tr>
+      `;
+    } else {
+      emailRows += `
+        <tr><td style="background:#f2f2f2;"><b>是否已報價及金額</b></td><td>${data.quoted}</td></tr>
+        <tr><td style="background:#f2f2f2;"><b>是否有相關企業</b></td><td>${data.related}</td></tr>
+        <tr><td style="background:#f2f2f2;"><b>備註</b></td><td>${data.remark}</td></tr>
+      `;
+    }
+
+    const emailBody = `
+      <p>Dear Mina，以下案件請協助派案：</p>
+      <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; max-width: 650px; font-family: Arial, sans-serif;">
+        ${emailRows}
+      </table>
+      <br><br>
+      <a href="${dispatchUrl}" target="_blank" style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">派案</a>
+    `;
+
+    // 6. CC 清單
+    const ccList = [data.accountantEmail, data.managerEmail, CONFIG.BOSS_EMAIL].filter(Boolean).join(',');
+
+    const subjectCode = data.code ? `${data.code} ` : '';
+    const emailSubject = `【工商案件】${subjectCode}${data.company}`;
+
+    // 7. 發送信件 (EmailJS)
+    emailjs.send(CONFIG.EMAILJS_SERVICE_ID, CONFIG.EMAILJS_TEMPLATE_ID, {
+      to_email: CONFIG.B_MANAGER_EMAIL,
+      cc_email: ccList,
+      subject: emailSubject,
+      message_html: emailBody
+    }).then(() => {
+      alert("PASS案件已成功送出！");
+      document.getElementById('caseForm').reset();
+      document.getElementById('otherItemBox').style.display = 'none';
+      document.getElementById('isClientSection').style.display = 'none';
+      document.getElementById('notClientSection').style.display = 'none';
+      submitBtn.disabled = false;
+      submitBtn.innerText = "寄出PASS案件申請";
+    }, (err) => {
+      alert("寄信失敗，請檢查設定: " + JSON.stringify(err));
+      submitBtn.disabled = false;
+      submitBtn.innerText = "寄出PASS案件申請";
+    });
+  }
+</script>
+
+</body>
+</html>

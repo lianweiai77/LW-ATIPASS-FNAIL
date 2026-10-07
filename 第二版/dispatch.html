@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工商案件PASS分派表</title>
+  <style>
+    body { font-family: "Microsoft JhengHei", Arial, sans-serif; background-color: #f4f6f9; padding: 20px; }
+    .card { background: white; padding: 25px; border-radius: 8px; max-width: 650px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .btn { background-color: #007bff; color: white; border: none; padding: 10px 18px; font-size: 15px; border-radius: 5px; cursor: pointer; border-radius: 4px; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+    .modal-content { background: white; margin: 8% auto; padding: 25px; width: 90%; max-width: 500px; border-radius: 8px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    select, input[type="number"] { width: 100%; padding: 8px; box-sizing: border-box; }
+    .price-row { display: flex; align-items: center; gap: 5px; margin-top: 5px; }
+    .price-row input { width: 90px; }
+    .actions { text-align: right; margin-top: 20px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script src="config.js"></script>
+</head>
+<body>
+
+<div class="card">
+  <h2>工商案件PASS分派表</h2>
+  <div id="caseInfo">載入案件資料中...</div>
+  <br>
+  <button class="btn" onclick="openModal()">派案</button>
+</div>
+
+<!-- 彈出派案小表單視窗 -->
+<div id="dispatchModal" class="modal">
+  <div class="modal-content">
+    <h3>派案資訊填寫</h3>
+    <form onsubmit="handleDispatchSubmit(event)">
+      <div class="form-group">
+        <label>派案對象：</label>
+        <select id="assigneeSelect" required></select>
+      </div>
+
+      <div class="form-group">
+        <label>報價選擇：</label>
+        <div style="margin-bottom: 10px;">
+          <input type="checkbox" id="taxCheck" onchange="toggleInputs()">
+          <label for="taxCheck" style="display:inline;">【含國稅局】</label>
+          <div id="taxInputs" class="price-row" style="display:none; padding-left:20px;">
+            <input type="number" id="taxPrice" placeholder="金額"> - 
+            <input type="number" id="taxDiscount" placeholder="折扣">
+          </div>
+        </div>
+
+        <div>
+          <input type="checkbox" id="noTaxCheck" onchange="toggleInputs()">
+          <label for="noTaxCheck" style="display:inline;">【不含國稅局】</label>
+          <div id="noTaxInputs" class="price-row" style="display:none; padding-left:20px;">
+            <input type="number" id="noTaxPrice" placeholder="金額"> - 
+            <input type="number" id="noTaxDiscount" placeholder="折扣">
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn" style="background:#6c757d;" onclick="closeModal()">取消</button>
+        <button type="submit" class="btn" style="background:#28a745;" id="dispatchBtn">寄出</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+
+  // 解析 URL 參數取得案件資料
+  const params = new URLSearchParams(window.location.search);
+  const caseData = {
+    code: params.get('code') || '',
+    company: params.get('company') || '',
+    item: params.get('item') || '',
+    contact: params.get('contact') || '',
+    isClient: params.get('isClient') || '-',
+    group: params.get('group') || '-',
+    accountant: params.get('accountant') || '-',
+    accountantEmail: params.get('accountantEmail') || '',
+    managerEmail: params.get('managerEmail') || '',
+    quoted: params.get('quoted') || '',
+    related: params.get('related') || '',
+    remark: params.get('remark') || ''
+  };
+
+  // 渲染頁面資訊
+  let pageDetailsHtml = `
+    <p><b>公司名稱：</b>${caseData.company}</p>
+    <p><b>代碼：</b>${caseData.code || '未填寫'}</p>
+    <p><b>項目：</b>${caseData.item}</p>
+    <p><b>聯絡方式：</b><br>${caseData.contact}</p>
+    <p><b>是否為記帳客戶：</b>${caseData.isClient}</p>
+  `;
+
+  if (caseData.isClient === '是') {
+    pageDetailsHtml += `
+      <p><b>組別：</b>${caseData.group}</p>
+      <p><b>帳務同事：</b>${caseData.accountant}</p>
+      <p><b>是否已報價及金額：</b>${caseData.quoted}</p>
+      <p><b>備註：</b>${caseData.remark}</p>
+    `;
+  } else {
+    pageDetailsHtml += `
+      <p><b>是否已報價及金額：</b>${caseData.quoted}</p>
+      <p><b>是否有相關企業：</b>${caseData.related}</p>
+      <p><b>備註：</b>${caseData.remark}</p>
+    `;
+  }
+
+  document.getElementById('caseInfo').innerHTML = pageDetailsHtml;
+
+  // 動態載入 config.js 中的派案對象選單
+  const assigneeSelect = document.getElementById('assigneeSelect');
+  assigneeSelect.innerHTML = '<option value="">請選擇派案同仁</option>';
+  CONFIG.DISPATCH_ASSIGNEES.forEach(item => {
+    assigneeSelect.innerHTML += `<option value="${item.email}" data-name="${item.name}">${item.name}</option>`;
+  });
+
+  function openModal() { document.getElementById('dispatchModal').style.display = 'block'; }
+  function closeModal() { document.getElementById('dispatchModal').style.display = 'none'; }
+  
+  function toggleInputs() {
+    document.getElementById('taxInputs').style.display = document.getElementById('taxCheck').checked ? 'flex' : 'none';
+    document.getElementById('noTaxInputs').style.display = document.getElementById('noTaxCheck').checked ? 'flex' : 'none';
+  }
+
+  function handleDispatchSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('dispatchBtn');
+    btn.disabled = true;
+    btn.innerText = "寄出中...";
+
+    const selectedOption = assigneeSelect.options[assigneeSelect.selectedIndex];
+    const assigneeEmail = selectedOption.value;
+    const assigneeName = selectedOption.getAttribute('data-name');
+
+    // 組合報價文字
+    let quoteHtml = '';
+    if (document.getElementById('taxCheck').checked) {
+      const price = Number(document.getElementById('taxPrice').value) || 0;
+      const discount = Number(document.getElementById('taxDiscount').value) || 0;
+      quoteHtml += `【含國稅局】${price} - ${discount} = ${price - discount}元<br>`;
+    }
+    if (document.getElementById('noTaxCheck').checked) {
+      const price = Number(document.getElementById('noTaxPrice').value) || 0;
+      const discount = Number(document.getElementById('noTaxDiscount').value) || 0;
+      quoteHtml += `【不含國稅局】${price} - ${discount} = ${price - discount}元<br>`;
+    }
+
+    // 計算 CC 清單
+    const otherAssignees = CONFIG.DISPATCH_ASSIGNEES.map(a => a.email).filter(email => email !== assigneeEmail);
+    const originalAll = [CONFIG.B_MANAGER_EMAIL, caseData.accountantEmail, caseData.managerEmail, CONFIG.BOSS_EMAIL];
+    const ccList = [...new Set([...otherAssignees, ...originalAll])].filter(Boolean).join(',');
+
+    // 組裝原信表格內容
+    let originalRows = `
+      <tr><td style="background:#f2f2f2; width:30%;"><b>公司名稱</b></td><td>${caseData.company}</td></tr>
+      <tr><td style="background:#f2f2f2;"><b>代碼</b></td><td>${caseData.code || '未填寫'}</td></tr>
+      <tr><td style="background:#f2f2f2;"><b>項目</b></td><td>${caseData.item}</td></tr>
+      <tr><td style="background:#f2f2f2;"><b>聯絡方式</b></td><td>${caseData.contact}</td></tr>
+      <tr><td style="background:#f2f2f2;"><b>是否為記帳客戶</b></td><td>${caseData.isClient}</td></tr>
+    `;
+
+    if (caseData.isClient === '是') {
+      originalRows += `
+        <tr><td style="background:#f2f2f2;"><b>組別</b></td><td>${caseData.group}</td></tr>
+        <tr><td style="background:#f2f2f2;"><b>帳務同事</b></td><td>${caseData.accountant}</td></tr>
+        <tr><td style="background:#f2f2f2;"><b>是否已報價及金額</b></td><td>${caseData.quoted}</td></tr>
+        <tr><td style="background:#f2f2f2;"><b>備註</b></td><td>${caseData.remark}</td></tr>
+      `;
+    } else {
+      originalRows += `
+        <tr><td style="background:#f2f2f2;"><b>是否已報價及金額</b></td><td>${caseData.quoted}</td></tr>
+        <tr><td style="background:#f2f2f2;"><b>是否有相關企業</b></td><td>${caseData.related}</td></tr>
+        <tr><td style="background:#f2f2f2;"><b>備註</b></td><td>${caseData.remark}</td></tr>
+      `;
+    }
+
+    const fullMessage = `
+      Dear ${assigneeName}，以下案件請協助處理：<br><br>
+      <b>【報價資訊】</b><br>
+      ${quoteHtml || '無'}<br>
+      <hr style="border:none; border-top:1px solid #ccc; margin:20px 0;">
+      <div style="color: #444;">
+        <p><b>----- 原始案件資訊 -----</b></p>
+        <p>Dear Mina，以下案件請協助派案：</p>
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; max-width: 650px; font-family: Arial, sans-serif;">
+          ${originalRows}
+        </table>
+      </div>
+    `;
+
+    const subjectCode = caseData.code ? `${caseData.code} ` : '';
+    const emailSubject = `【工商派案】${subjectCode}${caseData.company}`;
+
+    emailjs.send(CONFIG.EMAILJS_SERVICE_ID, CONFIG.EMAILJS_TEMPLATE_ID, {
+      to_email: assigneeEmail,
+      cc_email: ccList,
+      subject: emailSubject,
+      message_html: fullMessage
+    }).then(() => {
+      alert("派案完成並已發送通知信！");
+      closeModal();
+      btn.disabled = false;
+      btn.innerText = "寄出";
+    }, (err) => {
+      alert("派案失敗: " + JSON.stringify(err));
+      btn.disabled = false;
+      btn.innerText = "寄出";
+    });
+  }
+</script>
+</body>
+</html>
